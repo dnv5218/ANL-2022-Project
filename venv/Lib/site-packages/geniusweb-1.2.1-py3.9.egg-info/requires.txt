@@ -1,0 +1,5 @@
+pyson@ https://tracinsy.ewi.tudelft.nl/pubtrac/Utilities/export/312/pyson/dist/pyson-1.1.3.tar.gz
+utilities@ https://tracinsy.ewi.tudelft.nl/pubtrac/Utilities/export/314/utilitiespy/dist/utilities-1.0.5.tar.gz
+logging@ https://tracinsy.ewi.tudelft.nl/pubtrac/Utilities/export/226/loggingpy/dist/logging-1.0.0.tar.gz
+websocket-client==1.0.1
+PyQt5==5.15.6
