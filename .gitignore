@@ -5,6 +5,7 @@ __pycache__
 agent_storage
 logs
 results
+venv/
 
 *.sbatch
 *.log
