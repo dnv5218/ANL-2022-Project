@@ -17,21 +17,23 @@ a_linear = "agents.linear_agent.linear_agent.LinearAgent"
 a_random = "agents.random_agent.random_agent.RandomAgent"
 a_stupid = "agents.stupid_agent.stupid_agent.StupidAgent"
 
-agents = [a_boulware, a_conceder, a_hardliner, a_linear, a_random]
+agents = [a_boulware, a_conceder, a_hardliner, a_linear, a_random, a_stupid]
+names = ["Boulware", "Conceder", "Hardliner", "Linear", "Random", "Stupid"]
+
 for i in range(len(agents)):
-    RESULTS_DIR = Path("results/experimental", str(i))
+    RESULTS_DIR = Path(f"results/experimental{str(i)}-{time.strftime('%Y%m%d-%H%M%S')}")
     # create results directory if it does not exist
     if not RESULTS_DIR.exists():
         RESULTS_DIR.mkdir(parents=True)
     settings = {"agents": [{"class": agents[i]}, {"class": a_experiment}],
-                "profiles": ["domains/domain00/profileA.json", "domains/domain00/profileB.json"],
+                "profiles": ["domains/domain26/profileA.json", "domains/domain26/profileB.json"],
                 "deadline_time_ms": 10000}
     session_results_trace, session_results_summary = run_session(settings)
     # plot trace to html file
     if not session_results_trace["error"]:
         experimental_plotter(session_results_trace)
     # write results to file
-    #with open(RESULTS_DIR.joinpath("session_results_trace.json"), "w", encoding="utf-8") as f:
-        #f.write(json.dumps(session_results_trace, indent=2))
-    #with open(RESULTS_DIR.joinpath("session_results_summary.json"), "w", encoding="utf-8") as f:
-        #f.write(json.dumps(session_results_summary, indent=2))
+    with open(RESULTS_DIR.joinpath("session_results_trace.json"), "w", encoding="utf-8") as f:
+        f.write(json.dumps(session_results_trace, indent=2))
+    with open(RESULTS_DIR.joinpath("session_results_summary.json"), "w", encoding="utf-8") as f:
+        f.write(json.dumps(session_results_summary, indent=2))
