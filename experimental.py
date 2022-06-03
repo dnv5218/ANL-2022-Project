@@ -17,7 +17,7 @@ a_linear = "agents.linear_agent.linear_agent.LinearAgent"
 a_random = "agents.random_agent.random_agent.RandomAgent"
 a_stupid = "agents.stupid_agent.stupid_agent.StupidAgent"
 
-agents = [a_boulware, a_conceder, a_hardliner, a_linear, a_random, a_stupid]
+agents = [a_boulware, a_conceder, a_hardliner, a_linear, a_random]
 for i in range(len(agents)):
     RESULTS_DIR = Path("results/experimental", str(i))
     # create results directory if it does not exist
@@ -35,7 +35,3 @@ for i in range(len(agents)):
         #f.write(json.dumps(session_results_trace, indent=2))
     #with open(RESULTS_DIR.joinpath("session_results_summary.json"), "w", encoding="utf-8") as f:
         #f.write(json.dumps(session_results_summary, indent=2))
-
-
-
-

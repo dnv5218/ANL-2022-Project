@@ -1,5 +1,7 @@
 import logging
+from pandas import array
 from random import randint
+from sklearn.linear_model import LinearRegression
 from time import time
 from typing import cast
 
@@ -52,6 +54,11 @@ class ExperimentAgent(DefaultParty):
         self.opponent_model: OpponentModel = None
         self.logger.log(logging.INFO, "party is initialized")
 
+        self.bids_given: list = None
+        self.bids_received: list = None
+        self.proposal_time: float = None
+        self.opponent_bid_times: list = None
+
     def notifyChange(self, data: Inform):
         """MUST BE IMPLEMENTED
         This is the entry point of all interaction with your agent after is has been initialised.
@@ -81,6 +88,8 @@ class ExperimentAgent(DefaultParty):
             self.domain = self.profile.getDomain()
             profile_connection.close()
 
+            self.opponent_bid_times = []
+
         # ActionDone informs you of an action (an offer or an accept)
         # that is performed by one of the agents (including yourself).
         elif isinstance(data, ActionDone):
@@ -97,7 +106,10 @@ class ExperimentAgent(DefaultParty):
         # YourTurn notifies you that it is your turn to act
         elif isinstance(data, YourTurn):
             # execute a turn
+            if self.proposal_time is not None:
+                self.opponent_bid_times.append(self.progress.get(time() * 1000) - self.proposal_time)
             self.my_turn()
+            self.proposal_time = self.progress.get(time() * 1000)
 
         # Finished will be send if the negotiation has ended (through agreement or deadline)
         elif isinstance(data, Finished):
@@ -137,7 +149,7 @@ class ExperimentAgent(DefaultParty):
         Returns:
             str: Agent description
         """
-        return "Experiment Agent"
+        return "NASAP/ALAP Agent"
 
     def opponent_action(self, action):
         """Process an action that was received from the opponent.
@@ -168,7 +180,17 @@ class ExperimentAgent(DefaultParty):
             action = Accept(self.me, self.last_received_bid)
         else:
             # if not, find a bid to propose as counter offer
+            # TIMED BIDDING
+            t = self.progress.get(time() * 1000)
+            self.logger.log(logging.INFO, t)
             bid = self.find_bid()
+            # Wait for final bid
+            if t >= 0.95:
+                t_o = self.predict_bid_time(self.opponent_bid_times[-10:])
+                self.logger.log(logging.INFO, self.opponent_bid_times)
+                self.logger.log(logging.INFO, t_o)
+                while t < 1 - t_o:
+                    t = self.progress.get(time() * 1000)
             action = Offer(self.me, bid)
 
         # send the action
@@ -212,7 +234,7 @@ class ExperimentAgent(DefaultParty):
         best_bid = None
 
         # take 500 attempts to find a bid according to a heuristic score
-        for _ in range(5000):
+        for _ in range(500):
             bid = all_bids.get(randint(0, all_bids.size() - 1))
             bid_score = self.score_bid(bid)
             if bid_score > best_bid_score:
@@ -245,4 +267,10 @@ class ExperimentAgent(DefaultParty):
             opponent_score = (1.0 - alpha * time_pressure) * opponent_utility
             score += opponent_score
 
+        return our_utility
         return score
+
+    def predict_bid_time(self, bid_times):
+        regr = LinearRegression()
+        regr.fit(array(range(len(bid_times))).reshape(-1, 1), array(bid_times).reshape(-1, 1))
+        return regr.predict(array([len(bid_times)]).reshape(1, 1))
