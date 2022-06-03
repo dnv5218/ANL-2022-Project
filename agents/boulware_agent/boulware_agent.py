@@ -20,4 +20,4 @@ class BoulwareAgent(TimeDependentAgent):
 
     # Override
     def getE(self) -> float:
-        return 0.2
+        return 0.1
