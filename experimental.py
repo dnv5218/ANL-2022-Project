@@ -26,7 +26,7 @@ for i in range(len(agents)):
     if not RESULTS_DIR.exists():
         RESULTS_DIR.mkdir(parents=True)
     settings = {"agents": [{"class": agents[i]}, {"class": a_experiment}],
-                "profiles": ["domains/domain26/profileA.json", "domains/domain26/profileB.json"],
+                "profiles": ["domains/domain00/profileA.json", "domains/domain00/profileB.json"],
                 "deadline_time_ms": 10000}
     session_results_trace, session_results_summary = run_session(settings)
     # plot trace to html file

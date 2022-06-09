@@ -22,7 +22,7 @@ settings = {
         },
         {
             "class": "agents.experiment_agent2.experiment_agent2.ExperimentAgent2",
-            # "parameters": {"storage_dir": "agent_storage/ExperimentAgent"},
+            "parameters": {"storage_dir": "agent_storage/ExperimentAgent2"},
         },
     ],
     "profiles": ["domains/domain00/profileA.json", "domains/domain00/profileB.json"],

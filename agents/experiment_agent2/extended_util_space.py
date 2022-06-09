@@ -68,12 +68,12 @@ class ExtendedUtilSpace:
     def getMax(self) -> Decimal:
         return self._maxUtil
 
-    def getBids(self, utilityGoal: Decimal) -> ImmutableList[Bid]:
+    def getBids(self, utilityGoal: Decimal, time: float) -> ImmutableList[Bid]:
         """
         @param utilityGoal the requested utility
         @return bids with utility inside [utilitygoal-{@link #tolerance},
                 utilitygoal]
         """
         return self._bidutils.getBids(
-            Interval(utilityGoal - self._tolerance, utilityGoal)
+            Interval(utilityGoal - (Decimal(time)*3 + 1)*self._tolerance, utilityGoal + (Decimal(time)*3 + 1)*self._tolerance)
         )

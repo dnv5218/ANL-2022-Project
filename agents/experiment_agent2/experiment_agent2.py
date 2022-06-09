@@ -1,69 +1,61 @@
-import logging
-from operator import index
-from pandas import array
-from random import randint, random
-from sklearn.linear_model import LinearRegression
-import traceback
-from typing import cast, Dict, List, Set, Collection
-
+from agents.experiment_agent2.extended_util_space import ExtendedUtilSpace
+from agents.experiment_agent2.utils.opponent_model import OpponentModel
+from decimal import Decimal
 from geniusweb.actions.Accept import Accept
 from geniusweb.actions.Action import Action
-from geniusweb.actions.LearningDone import LearningDone
 from geniusweb.actions.Offer import Offer
 from geniusweb.actions.PartyId import PartyId
-from geniusweb.bidspace.AllBidsList import AllBidsList
 from geniusweb.inform.ActionDone import ActionDone
 from geniusweb.inform.Finished import Finished
 from geniusweb.inform.Inform import Inform
-from geniusweb.inform.OptIn import OptIn
 from geniusweb.inform.Settings import Settings
 from geniusweb.inform.YourTurn import YourTurn
 from geniusweb.issuevalue.Bid import Bid
-from geniusweb.issuevalue.Domain import Domain
-from geniusweb.issuevalue.Value import Value
-from geniusweb.issuevalue.ValueSet import ValueSet
 from geniusweb.party.Capabilities import Capabilities
 from geniusweb.party.DefaultParty import DefaultParty
-from geniusweb.profile.utilityspace.UtilitySpace import UtilitySpace
-from geniusweb.profileconnection.ProfileConnectionFactory import (
-    ProfileConnectionFactory,
-)
-from geniusweb.progress.ProgressRounds import ProgressRounds
-from geniusweb.utils import val
-from geniusweb.profileconnection.ProfileInterface import ProfileInterface
 from geniusweb.profile.utilityspace.LinearAdditive import LinearAdditive
+from geniusweb.profileconnection.ProfileConnectionFactory import ProfileConnectionFactory
+from geniusweb.profileconnection.ProfileInterface import ProfileInterface
 from geniusweb.progress.Progress import Progress
+from geniusweb.references.Parameters import Parameters
+from pandas import array
+from random import randint
+from sklearn.linear_model import LinearRegression
+from time import time as clock
 from tudelft.utilities.immutablelist.ImmutableList import ImmutableList
-from time import sleep, time as clock
-from decimal import Decimal
-import sys
-from agents.time_dependent_agent.extended_util_space import ExtendedUtilSpace
 from tudelft_utilities_logging.Reporter import Reporter
+from typing import cast
+import logging
 
 
 class ExperimentAgent2(DefaultParty):
     def __init__(self, reporter: Reporter = None):
         super().__init__(reporter)
-        self._profileint: ProfileInterface = None
-        self._utilspace: LinearAdditive = None
-        self._me: PartyId = None
-        self._progress: Progress = None
-        self._receivedBids: list = []
-        self._receivedUtils: list = []
-        self._lastReceivedBid: Bid = None
-        self._lastReceivedUtil: Decimal = None
         self._bestReceivedBid: Bid = None
         self._bestReceivedUtil: Decimal = Decimal(0)
-        self._proposalTime: float = None
-        self._opponentBidTimes: list = []
-        self._extendedspace: ExtendedUtilSpace = None
         self._e: float = 0.1
+        self._extendedspace: ExtendedUtilSpace = None
+        self._lastReceivedBid: Bid = None
+        self._lastReceivedUtil: Decimal = None
+        self._me: PartyId = None
+        self._opponentBidTimes: list = []
+        self._opponentModel: OpponentModel = None
+        self._other: str = None
+        self._parameters: Parameters = None
+        self._profileint: ProfileInterface = None
+        self._progress: Progress = None
+        self._proposalTime: float = None
+        self._receivedBids: list = []
+        self._receivedUtils: list = []
         self._settings: Settings = None
+        self._storageDir: str = None
+        self._summary: dict = {}
+        self._utilspace: LinearAdditive = None
         self.getReporter().log(logging.INFO, "party is initialized")
 
     def getCapabilities(self) -> Capabilities:
         return Capabilities(
-            set(["SAOP", "Learn", "MOPAC"]),
+            set(["SAOP"]),
             set(["geniusweb.profile.utilityspace.LinearAdditive"]),
         )
 
@@ -73,6 +65,8 @@ class ExperimentAgent2(DefaultParty):
                 self._settings = info
                 self._me = self._settings.getID()
                 self._progress = self._settings.getProgress()
+                self._parameters = self._settings.getParameters()
+                self._storageDir = self._parameters.get("storage_dir")
                 newe = self._settings.getParameters().get("e")
                 if newe != None:
                     if isinstance(newe, float):
@@ -82,15 +76,14 @@ class ExperimentAgent2(DefaultParty):
                             logging.WARNING,
                             "parameter e should be Double but found " + str(newe),
                         )
-                protocol: str = str(self._settings.getProtocol().getURI())
-                if "Learn" == protocol:
-                    val(self.getConnection()).send(LearningDone(self._me))
-                else:
-                    self._profileint = ProfileConnectionFactory.create(
-                        self._settings.getProfile().getURI(), self.getReporter()
-                    )
+                self._profileint = ProfileConnectionFactory.create(
+                    self._settings.getProfile().getURI(), self.getReporter()
+                )
             elif isinstance(info, ActionDone):
                 otheract: Action = info.getAction()
+                actor = otheract.getActor()
+                if actor != self._me:
+                    self._other = str(actor).rsplit("_", 1)[0]
                 if isinstance(otheract, Offer):
                     self._updateUtilSpace()
                     self._lastReceivedBid = otheract.getBid()
@@ -107,7 +100,6 @@ class ExperimentAgent2(DefaultParty):
                 # stop this party and free resources.
         except Exception as ex:
             self.getReporter().log(logging.CRITICAL, "Failed to handle info", ex)
-        self._updateRound(info)
 
     def getE(self) -> float:
         return self._e
@@ -120,7 +112,7 @@ class ExperimentAgent2(DefaultParty):
         )
 
     def terminate(self):
-        # self.saveData()
+        self.saveData()
         self.getReporter().log(logging.INFO, "party is terminating:")
         super().terminate()
         if self._profileint != None:
@@ -128,28 +120,11 @@ class ExperimentAgent2(DefaultParty):
             self._profileint = None
 
     def saveData(self):
-        data = "Data for learning (see README.md) " + self.other
-        with open(f"{self.storage_dir}/{self.other}.md", "w") as f:
+        data = "Data for learning (see README.md)"
+        with open(f"{self._storageDir}/{self._other}.md", "w") as f:
             f.write(data)
 
     ##################### private support funcs #########################
-
-    def _updateRound(self, info: Inform):
-        if self._settings == None:
-            return
-        protocol: str = str(self._settings.getProtocol().getURI())
-
-        if "SAOP" == protocol or "SHAOP" == protocol:
-            if not isinstance(info, YourTurn):
-                return
-        elif "MOPAC" == protocol:
-            if not isinstance(info, OptIn):
-                return
-        else:
-            return
-        # if we get here, round must be increased.
-        if isinstance(self._progress, ProgressRounds):
-            self._progress = self._progress.advance()
 
     def _myTurn(self):
         self._updateUtilSpace()
@@ -202,10 +177,10 @@ class ExperimentAgent2(DefaultParty):
             Decimal(0.5),
             self._extendedspace.getMax(),
         )
-        options: ImmutableList[Bid] = self._extendedspace.getBids(utilityGoal)
+        options: ImmutableList[Bid] = self._extendedspace.getBids(utilityGoal, time)
         if options.size() == 0:
             # if we can't find good bid, get max util bid....
-            options = self._extendedspace.getBids(self._extendedspace.getMax())
+            options = self._extendedspace.getBids(self._extendedspace.getMax(), time)
         # pick a random one.
         return options.get(randint(0, options.size() - 1))
 

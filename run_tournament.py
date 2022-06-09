@@ -26,6 +26,7 @@ tournament_settings = {
         },
         {
             "class": "agents.experiment_agent2.experiment_agent2.ExperimentAgent2",
+            "parameters": {"storage_dir": "agent_storage/ExperimentAgent2"},
         },
         {
             "class": "agents.boulware_agent.boulware_agent.BoulwareAgent",
