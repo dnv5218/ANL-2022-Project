@@ -182,13 +182,10 @@ class ExperimentAgent(DefaultParty):
             # if not, find a bid to propose as counter offer
             # TIMED BIDDING
             t = self.progress.get(time() * 1000)
-            self.logger.log(logging.INFO, t)
             bid = self.find_bid()
             # Wait for final bid
             if t >= 0.95:
                 t_o = self.predict_bid_time(self.opponent_bid_times[-10:])
-                self.logger.log(logging.INFO, self.opponent_bid_times)
-                self.logger.log(logging.INFO, t_o)
                 while t < 1 - t_o:
                     t = self.progress.get(time() * 1000)
             action = Offer(self.me, bid)
@@ -201,9 +198,8 @@ class ExperimentAgent(DefaultParty):
         for learning capabilities. Note that no extensive calculations can be done within this method.
         Taking too much time might result in your agent being killed, so use it for storage only.
         """
-        data = "Which data should be saved? What is useful for later learnings? What learning?"
-        self_dir = "agents/experiment_agent/data.md"
-        with open(self_dir, "w") as f:
+        data = "Data for learning (see README.md) " + self.other
+        with open(f"{self.storage_dir}/{self.other}.md", "w") as f:
             f.write(data)
 
     ###########################################################################################
