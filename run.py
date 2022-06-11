@@ -18,11 +18,11 @@ if not RESULTS_DIR.exists():
 settings = {
     "agents": [
         {
-            "class": "agents.boulware_agent.boulware_agent.BoulwareAgent",
+            "class": "agents.CSE3210.agent2.agent2.Agent2",
         },
         {
-            "class": "agents.experiment_agent.experiment_agent.ExperimentAgent",
-            "parameters": {"storage_dir": "agent_storage/ExperimentAgent"},
+            "class": "agents.charging_boul.charging_boul.ChargingBoul",
+            "parameters": {"storage_dir": "agent_storage/ChargingBoul"},
         },
     ],
     "profiles": ["domains/domain00/profileA.json", "domains/domain00/profileB.json"],
