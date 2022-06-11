@@ -18,11 +18,11 @@ if not RESULTS_DIR.exists():
 settings = {
     "agents": [
         {
-            "class": "agents.CSE3210.agent26.agent26.Agent26",
+            "class": "agents.CSE3210.agent2.agent2.Agent2",
         },
         {
-            "class": "agents.experiment_agent2.experiment_agent2.ExperimentAgent2",
-            "parameters": {"storage_dir": "agent_storage/ExperimentAgent2"},
+            "class": "agents.charging_boul.charging_boul.ChargingBoul",
+            "parameters": {"storage_dir": "agent_storage/ChargingBoul"},
         },
     ],
     "profiles": ["domains/domain00/profileA.json", "domains/domain00/profileB.json"],
