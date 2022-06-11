@@ -46,9 +46,9 @@ tournament_settings = {
         # {
         #     "class": "agents.stupid_agent.stupid_agent.StupidAgent",
         # },
-        # {
-        #     "class": "agents.CSE3210.agent2.agent2.Agent2",
-        # },
+        {
+            "class": "agents.CSE3210.agent2.agent2.Agent2",
+        },
         # {
         #     "class": "agents.CSE3210.agent3.agent3.Agent3",
         # },
@@ -76,9 +76,9 @@ tournament_settings = {
         # {
         #     "class": "agents.CSE3210.agent25.agent25.Agent25",
         # },
-        # {
-        #     "class": "agents.CSE3210.agent26.agent26.Agent26",
-        # },
+        {
+            "class": "agents.CSE3210.agent26.agent26.Agent26",
+        },
         # {
         #     "class": "agents.CSE3210.agent27.agent27.Agent27",
         # },
@@ -123,15 +123,9 @@ tournament_settings = {
         # },
     ],
     "profile_sets": [
-        ["domains/domain00/profileA.json", "domains/domain00/profileB.json"],
-        ["domains/domain01/profileA.json", "domains/domain01/profileB.json"],
         ["domains/domain02/profileA.json", "domains/domain02/profileB.json"],
-        ["domains/domain03/profileA.json", "domains/domain03/profileB.json"],
         ["domains/domain05/profileA.json", "domains/domain05/profileB.json"],
-        ["domains/domain08/profileA.json", "domains/domain08/profileB.json"],
         ["domains/domain13/profileA.json", "domains/domain13/profileB.json"],
-        ["domains/domain21/profileA.json", "domains/domain21/profileB.json"],
-        ["domains/domain34/profileA.json", "domains/domain34/profileB.json"],
         ["domains/domain06/profileA.json", "domains/domain06/profileB.json"],
         ["domains/domain40/profileA.json", "domains/domain40/profileB.json"],
         ["domains/domain46/profileA.json", "domains/domain46/profileB.json"],
